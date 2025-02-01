@@ -1,0 +1,23 @@
+---
+title: "Exploratory_Analysis"
+format: html
+editor: visual
+---
+
+```{r loadPackages}
+require(tidyverse)
+require(openxlsx)
+source("helper_functions.R")
+```
+
+```{r read dataframe, cache = TRUE}
+path_df = "Database/LoanStats3a.csv"
+path_dict = "Database/LCDataDictionary.xlsx"
+df = read.csv(path_df)
+#sheets = getSheetNames(path_dict)
+dictionary = read.xlsx(path_dict, sheet = "LoanStats")
+```
+
+```{r}
+get_description("total")
+```
