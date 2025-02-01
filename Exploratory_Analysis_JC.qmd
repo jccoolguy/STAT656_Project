@@ -21,3 +21,54 @@ dictionary = read.xlsx(path_dict, sheet = "LoanStats")
 ```{r}
 get_description("total")
 ```
+
+# Looking at Purposes
+
+```{r}
+unique_purposes = df |> 
+  distinct(purpose)
+unique_purposes
+```
+
+```{r}
+get_description("purpose")
+```
+
+The purpose column is provided by the borrower to categorize their request. There are `r nrow(unique_purposes)` unique values.
+
+```{r}
+purpose_numbers <- df |> 
+  group_by(purpose) |> 
+  summarize(n = n(), .groups = "drop") |> 
+  arrange(desc(n))
+purpose_numbers
+```
+
+```{r}
+dc_rows = as.integer(purpose_numbers |> filter(purpose == "debt_consolidation") |> select(n))
+total_rows = nrow(df)
+```
+
+The most common purpose is debt consolidation, making up `r 100*(dc_rows/total_rows)` % of the total rows in the data set.
+
+```{r, cache=TRUE}
+set.seed(10)
+description_examples_dc = df |> 
+  filter(purpose == "debt_consolidation") |> 
+  slice_sample(n = 20, replace = FALSE) |> 
+  select(desc)
+description_examples_dc
+```
+
+After taking a look at a few of the descriptions, many mention consolidating credit card debt. The Debt Consolidation purpose may overlap with the Credit Card purpose.
+
+```{r}
+set.seed(10)
+description_examples_cc = df |> 
+  filter(purpose == "credit_card") |> 
+  slice_sample(n = 20, replace = FALSE) |> 
+  select(desc)
+description_examples_cc
+```
+
+From this sample, it appears that the credit card purpose could be considered a subset of the debt consolidation purpose. Most are simply consolidating their credit card debt.
