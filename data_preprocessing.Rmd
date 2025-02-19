@@ -1,0 +1,39 @@
+---
+title: "Data Preprocessing"
+author: "Jack"
+date: "2025-02-19"
+output: html_document
+---
+
+```{r load_packages}
+require(tidyverse)
+require(openxlsx)
+source("helper_functions.R")
+```
+
+```{r read dataframe, cache = TRUE}
+path_df = "Database/LoanStats3a.csv"
+path_dict = "Database/LCDataDictionary.xlsx"
+df = read.csv(path_df)
+#sheets = getSheetNames(path_dict)
+dictionary = read.xlsx(path_dict, sheet = "LoanStats")
+```
+
+```{r}
+str(df)
+```
+
+```{r identifying types}
+num_strings = c("(?i)number|amount|total|percent|months|range|income|received|
+                balance")
+factor_strings = c("(?i)indicates|status|category|month|grade|state|code")
+string_strings = c("(?i)description|title")
+id_strings = c("(?i)id|url")
+date_strings = c("(?i)date")
+dictionary_w_types = dictionary |> 
+  mutate(num = str_detect(Description,num_strings)) |> 
+  mutate(factor = str_detect(Description, factor_strings)) |> 
+  mutate(string = str_detect(Description, string_strings)) |> 
+  mutate(id = str_detect(Description, id_strings)) |> 
+  mutate(date = str_detect(Description, date_strings))
+```
