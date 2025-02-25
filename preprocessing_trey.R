@@ -62,7 +62,33 @@ treyPreprocessingNumeric = treyPreprocessing %>%
             "verification_status_joint",
             "dti_joint",
             "annual_inc_joint",
-            "mths_since_last_major_derog")) %>% 
+            "mths_since_last_major_derog",
+            "policy_code",
+            "application_type")) %>% 
   select(where(is.numeric)) 
+
+#Check dimensions
 dim(treyPreprocessingNumeric)
+dim(treyPreprocessingFactors)
+
+
+
+#Now that data types/NAs are checked, look at variance
+table(treyPreprocessingFactors$policy_code)
+table(treyPreprocessingFactors$application_type)
+
+#Both factor variables have no variability...can remove
+
+nearZeroVar(treyPreprocessingNumeric,
+            saveMetrics = T)
+treyPreprocessingNumericWVariance = treyPreprocessingNumeric %>% 
+  preProcess(method = 'nzv') %>%
+  predict(newdata = treyPreprocessingNumeric)
+
+dim(treyPreprocessingNumericWVariance)
+
+#6 variables dropped due to near zero variance 
+
+#Now analyze skew 
+
 
