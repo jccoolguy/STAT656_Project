@@ -33,10 +33,11 @@ treyPreprocessingFactors = treyPreprocessing %>%
   mutate_all(factor)
 
 
-#Check for missing values 
+#Check for all missing values 
 apply(treyPreprocessing,
       FUN = function(x){(sum(is.na(x))==length(x))},
       MARGIN = 2)
+
 treyPreprocessingNumeric = treyPreprocessing %>%
   select(-c("bc_util",
             "bc_open_to_buy",
@@ -79,16 +80,94 @@ table(treyPreprocessingFactors$application_type)
 
 #Both factor variables have no variability...can remove
 
-nearZeroVar(treyPreprocessingNumeric,
+#Impute missing values in numeric variables 
+#Impute missing values 
+XimputeMedian = preProcess(treyPreprocessingNumeric,
+                           method = 'medianImpute',
+                           k = 5)
+NumericNoMissing = predict(XimputeMedian,
+                           treyPreprocessingNumeric)
+anyNA(NumericNoMissing)
+
+#Analyze variance...also center and scale
+nearZeroVar(NumericNoMissing,
             saveMetrics = T)
-treyPreprocessingNumericWVariance = treyPreprocessingNumeric %>% 
-  preProcess(method = 'nzv') %>%
-  predict(newdata = treyPreprocessingNumeric)
+treyPreprocessingNumericWVariance = NumericNoMissing %>% 
+  preProcess(method = c('center','scale','nzv')) %>%
+  predict(newdata = NumericNoMissing)
 
 dim(treyPreprocessingNumericWVariance)
 
 #6 variables dropped due to near zero variance 
 
+
+#Look at # of NAs in each of the numeric variables
+sum(is.na(treyPreprocessingNumericWVariance$total_rec_prncp))
+sum(is.na(treyPreprocessingNumericWVariance$total_rec_int))
+sum(is.na(treyPreprocessingNumericWVariance$recoveries))
+sum(is.na(treyPreprocessingNumericWVariance$last_pymnt_amnt))
+
 #Now analyze skew 
+skewnessVector = treyPreprocessingNumericWVariance %>%
+  sapply(e1071::skewness,na.rm=T)
+
+names(treyPreprocessingNumericWVariance)[abs(skewnessVector)> 1.5]
+
+#Plot those with absolute skew > 1.5 
+hist(treyPreprocessingNumericWVariance$total_rec_int,
+     main = "Histogram",
+     xlab = "Total Interest Received To Date")
+hist(treyPreprocessingNumericWVariance$recoveries,
+     main = "Histogram",
+     xlab = "Post Charge Off Gross Recovery")
+hist(treyPreprocessingNumericWVariance$last_pymnt_amnt,
+     main = "Histogram",
+     xlab = "Last Total Payment Amount Received")
+
+#Perform Yeo-Johnson transformation 
+YJTransformedVariables = treyPreprocessingNumericWVariance%>%
+  select(c("total_rec_int",
+           "recoveries",
+           "last_pymnt_amnt"))%>%
+  preProcess(method = 'YeoJohnson') %>%
+  predict(newdata=treyPreprocessingNumericWVariance %>%
+            select(c("total_rec_int",
+                     "recoveries",
+                     "last_pymnt_amnt")))
+
+#Check histograms 
+hist(YJTransformedVariables$total_rec_int,
+     main = "Histogram",
+     xlab = "YJ Total Interest Received To Date")
+hist(YJTransformedVariables$recoveries,
+     main = "Histogram",
+     xlab = "YJ Post Charge Off Gross Recovery")
+hist(YJTransformedVariables$last_pymnt_amnt,
+     main = "Histogram",
+     xlab = "YJ Last Total Payment Amount Received")
 
 
+#Recoveries looks odd 
+summary(treyPreprocessingNumericWVariance$recoveries)
+sum(treyPreprocessingNumericWVariance$recoveries > 0,
+    na.rm=T)
+
+
+#Look for extreme values 
+pcaOut = prcomp(YJTransformedVariables)
+
+YeoJscores = data.frame(pcaOut$x)
+ggplot(data = YeoJscores) + 
+  geom_point(aes(x = PC1, y = PC2))
+
+
+#2 extreme observations 
+extremeObs1 = which.min(YeoJscores$PC1)
+treyPreprocessingNumericWVariance[extremeObs1,]
+
+
+extremeObs2 = which.min(YeoJscores$PC2)
+treyPreprocessingNumericWVariance[extremeObs2,]
+
+
+#Do correlation filtering once we get all numeric variables together? 
