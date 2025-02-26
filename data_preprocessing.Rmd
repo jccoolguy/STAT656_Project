@@ -19,21 +19,109 @@ df = read.csv(path_df)
 dictionary = read.xlsx(path_dict, sheet = "LoanStats")
 ```
 
-```{r}
-str(df)
+```{r getting assigned columns}
+df_jack = df |> 
+  select(1:40)
 ```
 
-```{r identifying types}
+```{r}
 num_strings = c("(?i)number|amount|total|percent|months|range|income|received|
                 balance")
 factor_strings = c("(?i)indicates|status|category|month|grade|state|code")
 string_strings = c("(?i)description|title")
-id_strings = c("(?i)id|url")
+#id_strings = c("(?i)id|url")
 date_strings = c("(?i)date")
 dictionary_w_types = dictionary |> 
   mutate(num = str_detect(Description,num_strings)) |> 
   mutate(factor = str_detect(Description, factor_strings)) |> 
   mutate(string = str_detect(Description, string_strings)) |> 
-  mutate(id = str_detect(Description, id_strings)) |> 
   mutate(date = str_detect(Description, date_strings))
+```
+
+```{r complicated combos}
+complicated_types = dictionary_w_types |> 
+  filter(LoanStatNew %in% colnames(df_jack)) |> 
+  mutate(matches = num + factor + string + date) |> 
+  filter(matches > 1)
+```
+
+```{r}
+c_types = complicated_types |>
+  mutate(action = c(rep("num", 7),rep("factor",1),rep("drop",1)))
+```
+
+```{r simple combos}
+simple_types = dictionary_w_types |> 
+  filter(LoanStatNew %in% colnames(df_jack)) |> 
+  mutate(matches = num + factor + string + date) |> 
+  filter(matches == 1)
+```
+
+```{r}
+s_types = simple_types |> 
+  mutate(action = case_when(num == TRUE ~ "num",
+                            factor == TRUE ~ "factor",
+                            string == TRUE ~ "string")) |> 
+  mutate(action = ifelse(row_number() == 12, "num",action))
+```
+
+```{r last combos}
+unknown_types = dictionary_w_types |> 
+  filter(LoanStatNew %in% colnames(df_jack)) |> 
+  mutate(matches = num + factor + string + date) |> 
+  filter(matches == 0)
+```
+
+```{r}
+u_types = unknown_types |> 
+  mutate(action = c("num","drop","num","drop","drop"))
+```
+
+```{r}
+types = rbind(s_types, c_types, u_types) |> 
+  mutate(action = ifelse(LoanStatNew %in% c("earliest_cr_line","issue_d"),
+                         "date",action))
+```
+
+Processing
+
+```{r features}
+num_features = types |>
+  filter(action == "num") |> 
+  select(LoanStatNew) |> 
+  unlist(use.names = FALSE)
+factor_features = types |> 
+  filter(action == "factor") |> 
+  select(LoanStatNew) |> 
+  unlist(use.names = FALSE)
+string_features = types |> 
+  filter(action == "string") |> 
+  select(LoanStatNew) |> 
+  unlist(use.names = FALSE)
+date_features = types |> 
+  filter(action == "date") |> 
+  select(LoanStatNew) |> 
+  unlist(use.names = FALSE)
+```
+
+```{r}
+data_numeric = df_jack |> 
+  select(all_of(num_features)) |> 
+  mutate_all(as.numeric)
+```
+
+```{r}
+data_factor = df_jack |> 
+  select(all_of(factor_features)) |> 
+  mutate_all(as.factor)
+```
+
+```{r}
+data_string = df_jack |> 
+  select(all_of(string_features))
+```
+
+```{r}
+data_date = df_jack |> 
+  select(all_of(date_features))
 ```
