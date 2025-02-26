@@ -8,6 +8,7 @@ output: html_document
 ```{r load_packages}
 require(tidyverse)
 require(openxlsx)
+require(caret)
 source("helper_functions.R")
 ```
 
@@ -105,7 +106,7 @@ date_features = types |>
 ```
 
 ```{r}
-data_numeric = df_jack |> 
+data_num = df_jack |> 
   select(all_of(num_features)) |> 
   mutate_all(as.numeric)
 ```
@@ -125,3 +126,43 @@ data_string = df_jack |>
 data_date = df_jack |> 
   select(all_of(date_features))
 ```
+
+Preprocessing
+
+```{r}
+data_pre_processed = cbind(data_num,data_factor,data_string,data_date)
+dim(data_pre_processed)
+```
+
+Using near-zero-preprocessing
+
+```{r}
+data_processed = data_pre_processed |> preProcess(method = 'nzv') |> 
+  predict(newdata = data_pre_processed)
+dim(data_processed)
+head(data_processed)
+```
+
+We removed 6 columns this way.
+
+Missing values:
+
+```{r}
+n = dim(data_processed)[1]
+missing_values_by_feature = sapply(data_processed, function(x) 100*sum(is.na(x))/n)
+missing_values_by_feature[missing_values_by_feature > 50]
+```
+
+Mostly within reason except for these two, lets see how to handle.
+
+Questions to ask:
+
+How do we deal with description data, it could help us label the "other" categories in the purpose column. Many use other and still are going for debt consolidation.
+
+With date data, its not consistent but seems to have a pattern. Should we attempt to create a numeric value, like months since... or not use at all.
+
+How should we work through these columns which have a high amount of missings?
+
+How should we attempt to narrow down features? Correlation filtering?
+
+Should we exclude features like interest rate which already give us an idea of the risk of a loan?
