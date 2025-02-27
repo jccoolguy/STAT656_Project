@@ -166,3 +166,12 @@ How should we work through these columns which have a high amount of missings?
 How should we attempt to narrow down features? Correlation filtering?
 
 Should we exclude features like interest rate which already give us an idea of the risk of a loan?
+
+a_processed\$loan_status)
+
+```{r}
+data_pre_processed |>
+  select(loan_status) |> 
+  group_by(loan_status) |> 
+  summary(n = n())
+```
