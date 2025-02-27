@@ -93,7 +93,7 @@ anyNA(NumericNoMissing)
 nearZeroVar(NumericNoMissing,
             saveMetrics = T)
 treyPreprocessingNumericWVariance = NumericNoMissing %>% 
-  preProcess(method = c('center','scale','nzv')) %>%
+  preProcess(method = c('nzv')) %>%
   predict(newdata = NumericNoMissing)
 
 dim(treyPreprocessingNumericWVariance)
