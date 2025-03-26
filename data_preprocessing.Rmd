@@ -106,8 +106,27 @@ date_features = types |>
 ```
 
 ```{r}
+#df_jack |> 
+#  mutate(revol_util = as.numeric(sub("%","",revol_util))) |> 
+#  mutate(int_rate = as.numeric(sub("%", "", int_rate))) |> 
+#  mutate(term = as.numeric(sub("months","",term))) |> 
+#  mutate(emp_length_no_years = sub("years","",emp_length)) |> 
+ # mutate(emp_length_no_year = sub("year", "", emp_length_no_years)) |> 
+ # mutate(emp_length_less_than = ifelse(emp_length_no_year = "<1",.5))
+```
+
+```{r}
+df_jack = df_jack |> 
+  mutate(revol_util = as.numeric(sub("%","",revol_util))) |> 
+  mutate(int_rate = as.numeric(sub("%", "", int_rate))) |> 
+  mutate(term = as.numeric(sub("months","",term))) |> 
+  select(-emp_length)
+```
+
+```{r}
+num_features2 = num_features[-21]
 data_num = df_jack |> 
-  select(all_of(num_features)) |> 
+  select(all_of(num_features[-21])) |> 
   mutate_all(as.numeric)
 ```
 
