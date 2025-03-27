@@ -105,14 +105,16 @@ date_features = types |>
   unlist(use.names = FALSE)
 ```
 
+Fixing emp length
+
 ```{r}
-#df_jack |> 
-#  mutate(revol_util = as.numeric(sub("%","",revol_util))) |> 
-#  mutate(int_rate = as.numeric(sub("%", "", int_rate))) |> 
-#  mutate(term = as.numeric(sub("months","",term))) |> 
-#  mutate(emp_length_no_years = sub("years","",emp_length)) |> 
- # mutate(emp_length_no_year = sub("year", "", emp_length_no_years)) |> 
- # mutate(emp_length_less_than = ifelse(emp_length_no_year = "<1",.5))
+emp_length = df_jack |>
+  select(emp_length) |> 
+  mutate(emp_length_no_years = sub("years","",emp_length)) |> 
+  mutate(emp_length_no_year = sub("year", "", emp_length_no_years)) |> 
+  select(emp_length_no_year)
+save(emp_length,
+     file = "emp_length.Rdata")
 ```
 
 ```{r}
@@ -198,4 +200,8 @@ data_pre_processed |>
   select(loan_status) |> 
   group_by(loan_status) |> 
   summary(n = n())
+```
+
+```{r}
+
 ```
