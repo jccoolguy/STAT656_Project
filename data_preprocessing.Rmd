@@ -108,11 +108,15 @@ date_features = types |>
 Fixing emp length
 
 ```{r}
-emp_length = df_jack |>
-  select(emp_length) |> 
-  mutate(emp_length_no_years = sub("years","",emp_length)) |> 
-  mutate(emp_length_no_year = sub("year", "", emp_length_no_years)) |> 
-  select(emp_length_no_year)
+emp_length = as.vector(df_jack |>
+  select(emp_length))
+
+
+#|> 
+  #mutate(emp_length_no_years = sub("years","",emp_length)) |> 
+ # mutate(emp_length_no_year = sub("year", "", emp_length_no_years)) |> 
+  #select(emp_length_no_year)
+#emp_length = as.vector(emp_length)
 save(emp_length,
      file = "emp_length.Rdata")
 ```
