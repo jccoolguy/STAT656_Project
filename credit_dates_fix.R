@@ -16,12 +16,27 @@ credit_dates |>
 
 #Getting Month and Year for both variables
 
-credit_dates |> 
-  mutate(issue_date = as.Date(as.yearmon(issue_d,"%y-%b")))
-#library(zoo)
-#credit_dates |>
-#  mutate(index = as.integer(gregexpr("-",issue_d))) |>
-#  mutate(issue_year = 2000 + as.integer(str_sub(issue_d,1,index - 1)), issue_month = str_sub(issue_d, -3, -1))
-  
-  #mutate(issue_year = issue_d[1:index])
- # mutate(issue_year = issue_d[1:(as.numeric(gregexpr("-",issue_d)[[1]][1])-1)])
+#For Issue Date we use %y - %b pattern as it is consistent throughout
+issue_date <- credit_dates |> 
+  mutate(issue_date = as.double(as.yearmon(issue_d,"%y-%b"))) |>
+  select(issue_date)
+
+#For Earliest Credit Date we need to use an if statement to check the placement of "-", the placement changes when going from 2000 onward, we alo note that those need to be 1900 years
+# and not 2000 years, with the exception of 00
+earliest_cr_date <- credit_dates |> 
+  mutate(earliest_cr_date = 
+           ifelse(str_sub(earliest_cr_line,4,4) == "-",
+                  as.yearmon(paste(str_sub(earliest_cr_line,1,4),"19",str_sub(earliest_cr_line,-2,-1), sep = ""),"%b-%Y"),
+                  as.yearmon(earliest_cr_line,"%y-%b"))) |> 
+  mutate(earliest_cr_date =
+           ifelse(str_sub(earliest_cr_line,-2,-1) == "00",
+                  as.yearmon(earliest_cr_line, "%b-%y"), earliest_cr_date)) |> 
+  select(earliest_cr_date)
+
+#Creating a credit history variable           
+credit_history <- cbind(issue_date,earliest_cr_date) |> 
+  mutate(credit_history = issue_date - earliest_cr_date) |> 
+  select(credit_history)
+
+save(credit_history,
+     file = "credit_history_fixed.RData")
