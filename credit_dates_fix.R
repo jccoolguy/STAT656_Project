@@ -1,3 +1,4 @@
+library(tidyverse)
 load("credit_dates.RData")
 
 #examining unique values for both variables
@@ -15,5 +16,12 @@ credit_dates |>
 
 #Getting Month and Year for both variables
 
-#credit_dates |> 
-#  mutate(issue_year = issue_d =  )
+credit_dates |> 
+  mutate(issue_date = as.Date(as.yearmon(issue_d,"%y-%b")))
+#library(zoo)
+#credit_dates |>
+#  mutate(index = as.integer(gregexpr("-",issue_d))) |>
+#  mutate(issue_year = 2000 + as.integer(str_sub(issue_d,1,index - 1)), issue_month = str_sub(issue_d, -3, -1))
+  
+  #mutate(issue_year = issue_d[1:index])
+ # mutate(issue_year = issue_d[1:(as.numeric(gregexpr("-",issue_d)[[1]][1])-1)])
