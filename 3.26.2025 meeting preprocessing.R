@@ -4,6 +4,8 @@ lapply(packs,require,character.only=TRUE)
 
 load("jackPreprocessedData.RData")
 load("treyPreprocessedData.RData")
+load("credit_history_fixed.RData")
+load("emp_length_factor.RData")
 
 #Check that dimensions are the same 
 dim(data_pre_processed)
@@ -12,6 +14,16 @@ dim(treyPreprocessedData)
 #Merge data sets 
 preprocessedTotal = cbind(data_pre_processed,
                           treyPreprocessedData)
+
+#Drop 2 columns: issue_d & earliest_cr_y
+preprocessedTotal = preprocessedTotal[,-c(34:35)]
+
+#Add 2 columns: 
+preprocessedTotal = cbind(preprocessedTotal,
+                          credit_history)
+preprocessedTotal = cbind(preprocessedTotal,
+                          emp_length_factor)
+
 
 #Remove currents 
 preprocessedTotal = preprocessedTotal[preprocessedTotal$loan_status == "Fully Paid" | 
@@ -100,10 +112,22 @@ plotData %>% ggplot() +
   geom_histogram(aes(x=skewed, y = after_stat(density)), alpha = 0.5,  fill = 'blue') + 
   geom_histogram(aes(x = unskewed,  y = after_stat(density)), alpha = 0.5, color = 'red')
 
-# #Extreme values 
-# pcaOut = prcomp(preprocessedTotalNumYeoJ,
-#                 scale=TRUE,
-#                 center=TRUE)
-# preprocessedTotalNumYeoJscores = data.frame(pcaOut$x)
-# ggplot(data = XquanYeoJscores) + 
-#   geom_point(aes(x = PC1, y = PC2))
+#Extreme values 
+pcaOut = prcomp(preprocessedTotalNumYeoJ,
+                scale=TRUE,
+                center=TRUE)
+preprocessedTotalNumYeoJscores = data.frame(pcaOut$x)
+ggplot(data = preprocessedTotalNumYeoJscores) + 
+  geom_point(aes(x = PC1, y = PC2))
+
+#Nothing stands out 
+
+
+
+#Save as RData
+save(preprocessedTotalNumImpute,
+     file = "NumericVariablesWithoutYeoJ.RData")
+save(preprocessedTotalNumYeoJ,
+     file = "NumericVariablesWithYeoJ.RData")
+save(preprocessedTotalFactor,
+     file = "FactorVariablesClean.RData")
