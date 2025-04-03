@@ -17,8 +17,8 @@ require(corrplot)
 Adding non-transformed data:
 
 ```{r}
-load("NumericVariablesWithoutYeoj.Rdata")
-load("FactorVariablesClean.Rdata")
+load("numeric_features_retained_no_yeoJ.Rdata")
+load("factor_features_retained.Rdata")
 ```
 
 Since logistic regression will suffer when predictors are highly correlated, we check the correlation plot for numeric variables.
@@ -26,11 +26,11 @@ Since logistic regression will suffer when predictors are highly correlated, we 
 # Correlation Filtering
 
 ```{r}
-NumericVariablesCorr = cor(preprocessedTotalNumImpute)
+NumericVariablesCorr = cor(numeric_features_retained_no_yeoJ)
 corrplot(NumericVariablesCorr, order = "hclust",tl.cex = .7)
 ```
 
-There is a large pocket of correlation, mainly relating to the size of the loan amount. In that pocket there is a portion that cheats its way to the status output, in particular ones tracking the total amount paid into the loan.
+There is a large pocket of correlation, mainly relating to the size of the loan amount.
 
 Since there is evidence of high correlation between features, I decided to go with a correlation filter.
 
@@ -38,4 +38,12 @@ Since there is evidence of high correlation between features, I decided to go wi
 highCorr = findCorrelation(NumericVariablesCorr, .8, verbose = TRUE, names = TRUE)
 ```
 
-Grabbing numeric features after highly correlated
+```{r}
+highCorr = findCorrelation(NumericVariablesCorr, .8, names = TRUE)
+```
+
+Filtering out highly correlated features.
+
+```{r}
+numeric_features = numeric_features_retained_no_yeoJ[,!colnames(numeric_features_retained_no_yeoJ) %in% highCorr]
+```
