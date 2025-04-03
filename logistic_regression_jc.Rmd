@@ -1,0 +1,41 @@
+---
+title: "Logistic Regression"
+author: "Jack"
+date: "2025-04-03"
+output: html_document
+---
+
+# Loading Packages and Data
+
+```{r loadingPackages}
+require(dplyr)
+require(caret)
+require(pROC)
+require(corrplot)
+```
+
+Adding non-transformed data:
+
+```{r}
+load("NumericVariablesWithoutYeoj.Rdata")
+load("FactorVariablesClean.Rdata")
+```
+
+Since logistic regression will suffer when predictors are highly correlated, we check the correlation plot for numeric variables.
+
+# Correlation Filtering
+
+```{r}
+NumericVariablesCorr = cor(preprocessedTotalNumImpute)
+corrplot(NumericVariablesCorr, order = "hclust",tl.cex = .7)
+```
+
+There is a large pocket of correlation, mainly relating to the size of the loan amount. In that pocket there is a portion that cheats its way to the status output, in particular ones tracking the total amount paid into the loan.
+
+Since there is evidence of high correlation between features, I decided to go with a correlation filter.
+
+```{r}
+highCorr = findCorrelation(NumericVariablesCorr, .8, verbose = TRUE, names = TRUE)
+```
+
+Grabbing numeric features after highly correlated

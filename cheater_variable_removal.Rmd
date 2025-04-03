@@ -1,0 +1,82 @@
+---
+title: "Cheater Variable Removal"
+author: "Jack"
+date: "2025-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+require(openxlsx)
+require(tidyverse)
+```
+
+```{r data function additions}
+load("NumericVariablesWithoutYeoJ.Rdata")
+load("NumericVariablesWithYeoJ.Rdata")
+load("FactorVariablesClean.Rdata")
+```
+
+```{r dictionary, cache = TRUE}
+path_dict = "Database/LCDataDictionary.xlsx"
+dictionary = read.xlsx(path_dict, sheet = "LoanStats")
+```
+
+# Starting with numeric features:
+
+```{r}
+numeric_features = colnames(preprocessedTotalNumImpute)
+dictionary |>
+  filter(LoanStatNew %in% numeric_features) |> 
+  View()
+```
+
+Numeric features to be removed:
+
+| Feature         | Justification for Removal                                                                                                     |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------------|
+| last_pymnt_amnt | This is the size of the most recent payment received for the loan, isn't something we would know at the offset                |
+| recoveries      | post charge off gross recovery since charge off = default this is going to be a variable only available after knowing outcome |
+| total_pymnt     | payments received to date for total amount funded, self explanatory                                                           |
+| total_pymnt_inv | payments received to date for total amount funded by investors, self explanatory                                              |
+| total_rec_int   | interest received to date, self explanatory                                                                                   |
+| total_rec_prncp | principal received to date, self explanatory                                                                                  |
+
+: Numeric Features to Be Removed
+
+```{r}
+numeric_features_to_be_removed = c("last_pymnt_amnt","recoveries","total_pymnt","total_pymnt_inv","total_rec_int","total_rec_prncp")
+numeric_features_retained = numeric_features[!numeric_features %in% numeric_features_to_be_removed]
+numeric_features_retained_no_yeoJ = preprocessedTotalNumImpute[,numeric_features_retained]
+numeric_features_retained_yes_yeoJ = preprocessedTotalNumYeoJ[,numeric_features_retained]
+
+save(numeric_features_retained_no_yeoJ,
+     file = "numeric_features_retained_no_yeoJ.Rdata")
+save(numeric_features_retained_yes_yeoJ,
+     file = "numeric_features_retained_yes_yeoJ.Rdata")
+```
+
+# Factor Variables:
+
+```{r}
+factor_features = colnames(preprocessedTotalFactor)
+dictionary |>
+  filter(LoanStatNew %in% factor_features) |> 
+  View()
+```
+
+| Feature    | Justification for Removal                                                                                                                        |
+|------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| pymnt_plan | whether a payment plan was introduced, my interpretation is that this is introduced at a point in the loan where a borrower is struggling to pay |
+
+```{r}
+factor_features_to_be_removed = "pymnt_plan"
+factor_features_retained_temp = factor_features[!factor_features %in% factor_features_to_be_removed]
+factor_features_retained = preprocessedTotalFactor[,factor_features_retained_temp]
+
+save(factor_features_retained,
+     file = "factor_features_retained.Rdata")
+```
