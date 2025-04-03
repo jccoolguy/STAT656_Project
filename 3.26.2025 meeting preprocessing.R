@@ -112,6 +112,9 @@ plotData %>% ggplot() +
   geom_histogram(aes(x=skewed, y = after_stat(density)), alpha = 0.5,  fill = 'blue') + 
   geom_histogram(aes(x = unskewed,  y = after_stat(density)), alpha = 0.5, color = 'red')
 
+
+
+
 #Extreme values 
 pcaOut = prcomp(preprocessedTotalNumYeoJ,
                 scale=TRUE,
