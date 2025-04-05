@@ -79,7 +79,7 @@ Ensuring default is the event:
 
 ```{r}
 YtrainRelevel = relevel(Ytrain, ref = 'Charged Off')
-YtestRelevl   = relevel(Ytest,  ref = 'Charged Off')
+YtestRelevel   = relevel(Ytest,  ref = 'Charged Off')
 ```
 
 # Dummy Variables
@@ -101,3 +101,42 @@ XtestNumeric  = numeric_features[-trainingDataIndex,]
 XtrainFull    = cbind(XtrainFactors, XtrainNumeric)
 XtestFull     = cbind(XtestFactors,  XtestNumeric)
 ```
+
+# Logistic Regression
+
+```{r}
+trControl    = trainControl(method = 'none')
+outLogistic  = train(x = XtrainFull, y = YtrainRelevel,
+                    method = 'glm', trControl = trControl)
+YhatTestProb = predict(outLogistic, XtestFull, type = 'prob')
+```
+
+# Calibration Check
+
+```{r}
+calibPlot  = calibration(YtestRelevel ~ YhatTestProb$`Charged Off`, cuts = 5)
+xyplot(calibPlot)
+```
+
+Calibration is good for smaller probability estimates, the reason why it doesn't track at higher probability estimates is because default is a rare response:
+
+```{r}
+table(Y)
+```
+
+As such the model does not predict the probability of a default to be high often:
+
+```{r}
+sum(YhatTestProb$`Charged Off` > .5)
+```
+
+# Classifications
+
+```{r}
+rocCurve = roc(YtestRelevel, YhatTestProb$`Charged Off`)
+plot(rocCurve, legacy.axes = TRUE)
+```
+
+The ROC curve doesn't hug the top left too well, this is because this is a difficult classification problem.
+
+From here we need to decide what threshold to use.
