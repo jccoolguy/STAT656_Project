@@ -50,46 +50,54 @@ numeric_features = numeric_features_retained_no_yeoJ[,!colnames(numeric_features
 
 # Qualitative Feature Analysis and Data Splitting
 
-Creating Dummy Variables:
+First I take a look at the frequency of the no credit requirement feature:
 
 ```{r}
-dummyModel = dummyVars(~ ., data = factor_features_retained, fullRank = TRUE)
-
-factor_dummy = predict(dummyModel, factor_features_retained)
-
-trainingDataIndex = createDataPartition(factor_features_retained$nocreditrequirement, p = .5, list = FALSE)
+factor_features_retained |> group_by(nocreditrequirement) |> summarise(n())
 ```
 
-Combining Data:
+We can see that it is rare that there is no credit requirement, as such I partition using it so we have enough samples in both the training and test sets.
 
 ```{r}
-loan_data = cbind(numeric_features, factor_dummy)
-```
-
-Investigating no credit requirement:
-
-```{r}
-loan_data |>  group_by(nocreditrequirement) |> summarise(n())
-```
-
-I decided to stratify based on no credit requirement, as there are only 2749 instances where it is not required.
-
-Creating training/test split
-
-```{r}
-Y = loan_data$loan_status
+loan_data          = cbind(factor_features_retained, numeric_features)
+Y                  = factor_features_retained$loan_status
 set.seed(10)
-trainingDataIndex = createDataPartition(loan_data$nocreditrequirement, p = .5,
-                                        list = FALSE)
-trainingData = loan_data[trainingDataIndex,]
-testingData  = loan_data[-trainingDataIndex,]
+trainingDataIndex  = createDataPartition(loan_data$nocreditrequirement, 
+                                         p = .5, list = FALSE)
+trainingData       = loan_data[trainingDataIndex,]
+testingData        = loan_data[-trainingDataIndex,]
 ```
 
 # Supervisor
 
 ```{r}
-Ytrain = factor(select(trainingData, loan_status) |> unlist(), 
-                labels = c('Fully Paid', 'Charged Off'))
-Ytest   = factor(select(testingData, loan_status) |> unlist(), 
-                labels = c('Fully Paid', 'Charged Off'))
+Ytrain = factor(select(trainingData, loan_status) |> unlist())
+Ytest  = factor(select(testingData,  loan_status) |> unlist())
+```
+
+Ensuring default is the event:
+
+```{r}
+YtrainRelevel = relevel(Ytrain, ref = 'Charged Off')
+YtestRelevl   = relevel(Ytest,  ref = 'Charged Off')
+```
+
+# Dummy Variables
+
+```{r}
+x_factors     = subset(factor_features_retained, select = - loan_status)
+dummyModel    = dummyVars(~., data = x_factors, fullRank = TRUE)
+
+XtrainFactors = predict(dummyModel, x_factors[trainingDataIndex,])
+XtestFactors  = predict(dummyModel, x_factors[-trainingDataIndex,])
+```
+
+# Combining Numeric, Factor Types
+
+```{r}
+XtrainNumeric = numeric_features[trainingDataIndex,]
+XtestNumeric  = numeric_features[-trainingDataIndex,]
+
+XtrainFull    = cbind(XtrainFactors, XtrainNumeric)
+XtestFull     = cbind(XtestFactors,  XtestNumeric)
 ```
