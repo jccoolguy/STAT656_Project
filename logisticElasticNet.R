@@ -16,7 +16,7 @@ totaldata = totaldata[,-c(22,29)]
 
 #Preprocessing and cross validation
 set.seed(1)
-trainIndex = createDataPartition(totaldata$loan_status, p = 0.50, list = FALSE)
+trainIndex = createDataPartition(totaldata$nocreditrequirement, p = 0.50, list = FALSE)
 Y = select(totaldata, loan_status) %>% unlist(.)
 Xdf = select(totaldata, -loan_status)
 
@@ -97,19 +97,30 @@ probHatTest = predict(glmnetOut,
                       testdata,
                       s=elasticMod$bestTune$lambda,
                       type = 'response')
-YhatTestGlmnet = ifelse(probHatTest > 0.12, 'Charged Off', 'Fully Paid')
+
+
+#Calibration plot
+ytest2test = relevel(Ytest,
+                      "Charged Off")
+calPlot = calibration(ytest2test ~ probHatTest,
+                      cuts = 5)
+xyplot(calPlot)
+  
+#Preds for confusion matrix
+YhatTestGlmnet = ifelse(probHatTest > 0.5, 'Charged Off', 'Fully Paid')
 YhatTestGlmnet = as.factor(YhatTestGlmnet)
 YhatTestGlmnet = relevel(YhatTestGlmnet, ref= "Fully Paid")
 
+#Confusion matrix
 table(Ytest, YhatTestGlmnet)
 
 
 mean(YhatTestGlmnet == Ytest)
 
 #ROC
-rocOut = roc(response = Ytest,
-             probHatTest)
-plot(rocOut)
+rocOut = roc(Ytest,
+             as.vector(probHatTest))
+plot(rocOut, legacy.axis=T)
 
 ind = which.min(rocOut$sensitivities >= 0.80)
 rocOut$thresholds[ind]
