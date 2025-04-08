@@ -90,8 +90,8 @@ Ytest  = factor(select(testingData,  loan_status) |> unlist())
 Ensuring default is the event:
 
 ```{r}
-YtrainRelevel = relevel(Ytrain, ref = 'Charged Off')
-YtestRelevel   = relevel(Ytest,  ref = 'Charged Off')
+YtrainRelevel = relevel(Ytrain, ref = 'Fully Paid')
+YtestRelevel   = relevel(Ytest,  ref = 'Fully Paid')
 ```
 
 # Dummy Variables
