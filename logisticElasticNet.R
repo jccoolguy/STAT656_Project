@@ -120,7 +120,7 @@ mean(YhatTestGlmnet == Ytest)
 #ROC
 rocOut = roc(Ytest,
              as.vector(probHatTest))
-plot(rocOut, legacy.axis=T)
+plot(rocOut, legacy.axes=T)
 
 ind = which.min(rocOut$sensitivities >= 0.80)
 rocOut$thresholds[ind]
