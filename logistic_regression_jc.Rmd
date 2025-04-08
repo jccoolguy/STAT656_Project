@@ -23,6 +23,18 @@ load("factor_features_retained.Rdata")
 
 Since logistic regression will suffer when predictors are highly correlated, we check the correlation plot for numeric variables.
 
+# Dropping observations with Missing Flag
+
+```{r}
+numeric_features_retained_no_yeoJ = numeric_features_retained_no_yeoJ |> 
+  mutate(rows_to_drop = factor_features_retained$missingFlag) |> 
+  filter(rows_to_drop == 0) |> 
+  select(-rows_to_drop)
+factor_features_retained = factor_features_retained |> 
+  filter(missingFlag == 0 ) |> 
+  select(-c(missingFlag,initial_list_status))
+```
+
 # Correlation Filtering
 
 ```{r}
