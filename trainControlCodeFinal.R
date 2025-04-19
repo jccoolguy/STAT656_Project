@@ -94,3 +94,35 @@ XtestDummy = XDummy[-trainIndex, ]
 #Combine data
 traindata = cbind(XtrainNumeric,XtrainDummy)
 testdata = cbind(XtestNumeric, XtestDummy)
+
+#Save
+no_smote_train = traindata
+save(no_smote_train,
+     file="no_smote_train.Rda")
+save(testdata,
+     file = "Xtest.Rda")
+Ytrain_nosmote = Ytrain
+save(Ytrain_nosmote,
+     file = "Ytrain_nosmote.Rda")
+save(Ytest,
+     file = "Ytest.Rda")
+
+################################################################################
+
+#Smote algorithm
+library(smotefamily)
+set.seed(123)
+smote_train = SMOTE(X = as.data.frame(traindata),
+                    target = Ytrain)
+
+#Get corrected data
+smote_train = smote_train$data
+Ytrain_smote = as.factor(smote_train$class)
+Ytrain_smote = relevel(Ytrain_smote, ref = "Fully Paid")
+table(Ytrain_smote)
+smote_train = smote_train %>% select(-class)
+
+smote_train = save(smote_train,
+                   file = "smote_train.Rda")
+Ytrain_smote = save(Ytrain_smote,
+                    file = "Ytrain_smote.Rda")
