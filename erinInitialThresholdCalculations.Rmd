@@ -1,0 +1,41 @@
+---
+title: "erinInitialThresholdCalculations"
+output: pdf_document
+date: "2025-04-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Run all of Trey's code then do this:
+#Confusion matrix
+table(Ytest, YhatTestGlmnet)
+ind = min(which(rocOut$thresholds>=.499))
+elasticSensitivity = rocOut$sensitivities[ind]
+elasticSpecificity = rocOut$specificities[ind]
+```
+Sensitivity is .0171. Specificity is .9968.
+
+```{r}
+#do same for JAck's model
+YtestRelevel2 = relevel(YtestRelevel, ref="Charged Off")
+calibPlot2  = calibration(YtestRelevel2 ~ YhatTestProb$`Charged Off`, cuts = 5)
+xyplot(calibPlot2)
+
+YhatTestRaw = predict(outLogistic, XtestFull, type = 'raw')
+YhatTestRaw = as.factor(YhatTestRaw)
+
+table(Ytest, YhatTestRaw)
+
+rocCurve = roc(YtestRelevel, YhatTestProb$`Fully Paid`)
+
+ind = min(which(rocCurve$thresholds>=.499))
+
+logSensitivity = rocCurve$sensitivities[ind]
+logSpecificity = rocCurve$specificities[ind]
+
+auc(rocCurve)
+
+```
