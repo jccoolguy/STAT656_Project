@@ -54,6 +54,8 @@ Since there is evidence of high correlation between features, I decided to go wi
 
 ```{r}
 highCorr = findCorrelation(train_df_numeric_cor, .8, verbose = TRUE, names = TRUE)
+save(highCorr,
+     file = "highCorr.Rda")
 ```
 
 Filtering out highly correlated filters
@@ -63,95 +65,44 @@ train_df = train_df[,!colnames(train_df) %in% highCorr]
 test_df  = test_df[,!colnames(test_df) %in% highCorr]
 ```
 
-# Qualitative Feature Analysis and Data Splitting
-
-First I take a look at the frequency of the no credit requirement feature:
-
-```{r}
-factor_features_retained |> group_by(nocreditrequirement) |> summarise(n())
-```
-
-We can see that it is rare that there is no credit requirement, as such I partition using it so we have enough samples in both the training and test sets.
-
-```{r}
-loan_data          = cbind(factor_features_retained, numeric_features)
-Y                  = factor_features_retained$loan_status
-set.seed(10)
-trainingDataIndex  = createDataPartition(loan_data$nocreditrequirement, 
-                                         p = .5, list = FALSE)
-trainingData       = loan_data[trainingDataIndex,]
-testingData        = loan_data[-trainingDataIndex,]
-```
-
-# Supervisor
-
-```{r}
-Ytrain = factor(select(trainingData, loan_status) |> unlist())
-Ytest  = factor(select(testingData,  loan_status) |> unlist())
-```
-
-Ensuring default is the event:
-
-```{r}
-YtrainRelevel = relevel(Ytrain, ref = 'Fully Paid')
-YtestRelevel   = relevel(Ytest,  ref = 'Fully Paid')
-```
-
-# Dummy Variables
-
-```{r}
-x_factors     = subset(factor_features_retained, select = - loan_status)
-dummyModel    = dummyVars(~., data = x_factors, fullRank = TRUE)
-
-XtrainFactors = predict(dummyModel, x_factors[trainingDataIndex,])
-XtestFactors  = predict(dummyModel, x_factors[-trainingDataIndex,])
-```
-
-# Combining Numeric, Factor Types
-
-```{r}
-XtrainNumeric = numeric_features[trainingDataIndex,]
-XtestNumeric  = numeric_features[-trainingDataIndex,]
-
-XtrainFull    = cbind(XtrainFactors, XtrainNumeric)
-XtestFull     = cbind(XtestFactors,  XtestNumeric)
-```
-
 # Logistic Regression
 
 ```{r}
 trControl    = trainControl(method = 'none')
-outLogistic  = train(x = XtrainFull, y = YtrainRelevel,
+outLogistic  = train(x = train_df, y = Ytrain_nosmote,
                     method = 'glm', trControl = trControl)
-YhatTestProb = predict(outLogistic, XtestFull, type = 'prob')
+YhatTestProb = predict(outLogistic, testdata, type = 'prob')
 ```
 
 # Calibration Check
+
+```{r}
+YtestRelevel = relevel(Ytest,  ref = 'Charged Off')
+```
 
 ```{r}
 calibPlot  = calibration(YtestRelevel ~ YhatTestProb$`Charged Off`, cuts = 5)
 xyplot(calibPlot)
 ```
 
-Calibration is good for smaller probability estimates, the reason why it doesn't track at higher probability estimates is because default is a rare response:
+Note that this calibration plot is a bit misleading, our model predicts a probability of default of .8 one time. Case 8164 in Ytest, which is charged off (hence observed probability is 100).
 
 ```{r}
-table(Y)
-```
-
-As such the model does not predict the probability of a default to be high often:
-
-```{r}
-sum(YhatTestProb$`Charged Off` > .5)
+sum(YhatTestProb$`Charged Off` > .8)
+which(YhatTestProb$`Charged Off` > .8)
+Ytest[which(YhatTestProb$`Charged Off` > .8)]
 ```
 
 # Classifications
 
 ```{r}
-rocCurve = roc(YtestRelevel, YhatTestProb$`Charged Off`)
+rocCurve = roc(Ytest, YhatTestProb$`Charged Off`)
 plot(rocCurve, legacy.axes = TRUE)
 ```
 
-The ROC curve doesn't hug the top left too well, this is because this is a difficult classification problem.
-
-From here we need to decide what threshold to use.
+```{r}
+roc_logistic_data = cbind(rocCurve$thresholds,
+                          rocCurve$sensitivities,rocCurve$specificities)
+save(roc_logistic_data,
+     file = "roc_logistic_data.Rda")
+```

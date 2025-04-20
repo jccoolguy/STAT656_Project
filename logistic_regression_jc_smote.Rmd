@@ -1,0 +1,78 @@
+---
+title: "Logistic Regression"
+author: "Jack"
+date: "2025-04-03"
+output: html_document
+---
+
+# Loading Packages and Data
+
+```{r loadingPackages}
+require(dplyr)
+require(caret)
+require(pROC)
+require(corrplot)
+```
+
+Adding testing data:
+
+```{r}
+load("Xtest.Rda")
+load("Ytest.Rda")
+```
+
+Adding SMOTE training data and correlation filtering results:
+
+```{r}
+load("smote_train.Rda")
+load("Ytrain_smote.Rda")
+load("highCorr.Rda")
+```
+
+```{r}
+train_df = as.data.frame(smote_train)
+test_df  = as.data.frame(testdata)
+```
+
+Filtering out highly correlated features per previous document:
+
+```{r}
+train_df = train_df[,!colnames(train_df) %in% highCorr]
+test_df  = test_df[,!colnames(test_df) %in% highCorr]
+```
+
+# Logistic Regression
+
+```{r}
+trControl    = trainControl(method = 'none')
+outLogistic  = train(x = train_df, y = Ytrain_smote,
+                    method = 'glm', trControl = trControl)
+YhatTestProb = predict(outLogistic, test_df, type = 'prob')
+```
+
+# Calibration Check
+
+```{r}
+YtestRelevel = relevel(Ytest,  ref = 'Charged Off')
+```
+
+```{r}
+calibPlot  = calibration(YtestRelevel ~ YhatTestProb$`Charged Off`, cuts = 5)
+xyplot(calibPlot)
+```
+
+The calibration plot makes more sense when we consider we are prioritizing sensitivity vs accuracy.
+
+# Classifications
+
+```{r}
+rocCurve = roc(Ytest, YhatTestProb$`Charged Off`)
+plot(rocCurve, legacy.axes = TRUE)
+```
+
+```{r}
+roc_logistic_smote_data = cbind(rocCurve$thresholds,
+                          rocCurve$sensitivities,rocCurve$specificities)
+save(roc_logistic_smote_data,
+     file = "roc_logistic_smote_data.Rda")
+```
