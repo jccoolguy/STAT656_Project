@@ -1,0 +1,55 @@
+---
+title: "JC_Comparisons"
+author: "Jack Cunningham"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+```
+
+# Loading Data
+
+```{r}
+load("roc_elastic_data_smote.Rda")
+load("roc_elastic_data.Rda")
+load("roc_logistic_data.Rda")
+load("roc_logistic_smote_data.Rda")
+```
+
+# Comparing Performance Between SMOTE and non-SMOTE predictions
+
+Adding labels:
+
+```{r}
+colnames(roc_logistic_data) <- c("Threshold","Sensitivity","Specificity")
+colnames(roc_logistic_smote_data) <- c("Threshold","Sensitivity","Specificity")
+colnames(roc_elastic_data) <- c("Threshold","Sensitivity","Specificity")
+colnames(roc_elastic_data_smote) <- c("Threshold","Sensitivity","Specificity")
+
+roc_logistic_data <- as.data.frame(roc_logistic_data)
+roc_logistic_smote_data <- as.data.frame(roc_logistic_smote_data)
+roc_elastic_data <- as.data.frame(roc_elastic_data)
+roc_elastic_data_smote <- as.data.frame(roc_elastic_data_smote)
+```
+
+Plotting thresholds vs sensitivities
+
+```{r}
+png("logistic_elastic_net_sens_plot.png")
+ggplot(data = roc_elastic_data, aes(x = Threshold, y = Sensitivity, col = "Unchanged")) +
+  geom_line(size = 1.25) +
+  geom_line(data = roc_elastic_data_smote, aes(col = "SMOTE"), size = 1.25) +
+  ggtitle("Logistic Elastic Net")
+dev.off()
+```
+
+```{r}
+png(filename = "logistic_regression_sens_plot.png")
+ggplot(data = roc_logistic_data, aes(x = Threshold, y = Sensitivity, col = "Unchanged")) +
+  geom_line(size = 1.25) +
+  geom_line(data = roc_logistic_smote_data, aes(col = "SMOTE"), size = 1.25) +
+  ggtitle("Logistic Regression")
+dev.off()
+```
