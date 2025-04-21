@@ -71,7 +71,7 @@ save(roc_elastic_data_smote,
 
 
 #Get optimized threshold
-lossF = function(threshold, C = 0.6){
+lossF = function(threshold, C = 0.8){
   YhatTestGlmnet = ifelse(probHatTest > threshold, 'Charged Off', 'Fully Paid')
   YhatTestGlmnet = as.factor(YhatTestGlmnet)
   YhatTestGlmnet = relevel(YhatTestGlmnet, ref= "Fully Paid")

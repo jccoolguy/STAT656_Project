@@ -169,5 +169,18 @@ optim = optimize(f = lossF,
 
 objectiveThreshold = optim$objective
 
+
+minimized_threshold_elastic_nosmote = objectiveThreshold
+save(minimized_threshold_elastic_nosmote,
+     file = "minimized_threshold_elastic_nosmote.Rda")
+
+minimized_sensitivity_elastic_nosmote = sensitivityT
+save(minimized_sensitivity_elastic_nosmote,
+     file = "minimized_sensitivity_elastic_nosmote.Rda")
+
+minimized_specificity_elastic_nosmote = specificityT
+save(minimized_specificity_elastic_nosmote,
+     file = "minimized_specificity_elastic_nosmote.Rda")
+
 #Threshold of 0.2006014
 #Sensitivity of 0.4826772, specificity of 0.7910724
