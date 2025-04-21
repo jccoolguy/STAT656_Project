@@ -6,8 +6,8 @@ load("roc_elastic_data.Rda")
 load("roc_elastic_data_smote.Rda")
 roc_elastic_smote_data = roc_elastic_data_smote
 rm(roc_elastic_data_smote)
-#load("roc_logistic.Rda")
-#load("roc_logistic_smote.Rda")
+load("roc_logistic_data.Rda")
+load("roc_logistic_smote_data.Rda")
 
 #elastic no smote
 colnames(roc_elastic_data) = c("thresholds","sensitivities","specificities")
@@ -18,17 +18,12 @@ colnames(roc_elastic_smote_data) = c("thresholds","sensitivities","specificities
 roc_elastic_smote_data = as.data.frame(roc_elastic_smote_data)
 
 # #logistic no smote
-# colnames(roc_logistic_data) = c("thresholds","sensitivities","specificities")
-# roc_logistic_data = as.data.frame(roc_logistic_data)
+ colnames(roc_logistic_data) = c("thresholds","sensitivities","specificities")
+ roc_logistic_data = as.data.frame(roc_logistic_data)
 # 
 # #logistic smote
-# colnames(roc_logistic_smote_data) = c("thresholds","sensitivities","specificities")
-# roc_logistic_smote_data = as.data.frame(roc_logistic_smote_data)
-
-
-#test only
-roc_logistic_data = roc_elastic_data
-roc_logistic_smote_data = roc_elastic_smote_data
+ colnames(roc_logistic_smote_data) = c("thresholds","sensitivities","specificities")
+ roc_logistic_smote_data = as.data.frame(roc_logistic_smote_data)
 
 
 
