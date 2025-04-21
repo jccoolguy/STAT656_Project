@@ -16,6 +16,7 @@ tuneGrid = expand.grid('alpha'=c(0,.25,.5,.75,1),
                        'lambda' = seq(1*10^(-6),
                                       .002,
                                       length.out = 30))
+set.seed(123)
 elasticMod = train(x = smote_train,
                    y = Ytrain_smote,
                    method = "glmnet",
@@ -68,7 +69,10 @@ roc_elastic_data_smote = cbind(rocOut$thresholds,rocOut$sensitivities,rocOut$spe
 save(roc_elastic_data_smote,
      file = "roc_elastic_data_smote.Rda")
 
-
+#Predicted probability save
+predictedProbs_elastic_smote = probHatTest
+save(predictedProbs_elastic_smote,
+     file = "predictedProbs_elastic_smote.Rda")
 
 #Get optimized threshold
 lossF = function(threshold, C = 0.8){
