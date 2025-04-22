@@ -1,0 +1,12 @@
+name: STAT656_Project
+title: STAT656_Project
+username: erintreyjackproject
+account: erintreyjackproject
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14576980
+bundleId: 10154990
+url: https://erintreyjackproject.shinyapps.io/STAT656_Project/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
