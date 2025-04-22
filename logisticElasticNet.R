@@ -68,6 +68,7 @@ tuneGrid = expand.grid('alpha'=c(0,.25,.5,.75,1),
                        'lambda' = seq(1*10^(-6),
                                       .002,
                                       length.out = 30))
+
 elasticMod = train(x = no_smote_train,
                    y = Ytrain_nosmote,
                    method = "glmnet",
@@ -105,6 +106,8 @@ probHatTest = predict(glmnetOut,
                       testdata,
                       s=elasticMod$bestTune$lambda,
                       type = 'response')
+
+
 
 
 #Calibration plot
