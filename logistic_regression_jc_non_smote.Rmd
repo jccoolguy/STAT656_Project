@@ -106,3 +106,11 @@ roc_logistic_data = cbind(rocCurve$thresholds,
 save(roc_logistic_data,
      file = "roc_logistic_data.Rda")
 ```
+
+```{r}
+exp(outLogistic$finalModel$coefficients[86])
+```
+
+```{r}
+exp(confint.default(outLogistic$finalModel))
+```
